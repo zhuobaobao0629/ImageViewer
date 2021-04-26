@@ -1,0 +1,103 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.huawei.agconnect'
+def compileSdk = versions.compileSdk
+def minSdk = versions.minSdk
+def targetSdk = versions.targetSdk
+def buildTools = versions.buildTools
+def verCode = 20
+def verName = "3.0.1"
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion buildTools
+
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 29
+        versionCode verCode
+        versionName verName
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        def dirs = ['p_scaleimageview','p_progressview']
+        main {
+            dirs.each { dir ->
+                java.srcDir("src/${dir}/main/java")
+                res.srcDir("src/${dir}/main/res")
+            }
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation deps.junit
+    androidTestImplementation deps.test.runner
+    androidTestImplementation deps.test.espresso
+
+    implementation deps.support.compatV7
+
+    implementation 'com.huawei.hms:ml-computer-vision-handkeypoint:2.0.4.300'
+    implementation 'com.huawei.hms:ml-computer-vision-handkeypoint-model:2.0.4.300'
+}
+
+
+apply plugin: 'com.novoda.bintray-release'
+
+def bintrayName = "albertlii"
+def bintrayRepoName = "android-maven"
+def bintrayGroupId = "indi.liyi.view"
+def bintrayArtifactId = "image-viewer"
+def bintrayDesc = "This is a library for image browsing."
+def bintrayWebSite = "https://github.com/albert-lii/ImageViewer"
+def bintrayLicences = ['Apache-2.0']
+
+publish {
+    userOrg = bintrayName
+    repoName = bintrayRepoName
+    groupId = bintrayGroupId
+    artifactId = bintrayArtifactId
+    publishVersion = verName
+    desc = bintrayDesc
+    website = bintrayWebSite
+    licences = bintrayLicences
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    failOnError false
+    source = android.sourceSets.main.java.sourceFiles
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    classpath += configurations.compile
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
